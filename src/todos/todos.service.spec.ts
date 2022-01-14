@@ -1,6 +1,8 @@
+import { createMock } from '@golevelup/ts-jest';
+import { NotFoundException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Model } from 'mongoose';
+import { Model, Query } from 'mongoose';
 import { CreateTodoRequestDto } from './dto/requests/create-todo.request.dto';
 import { Todo } from './entities/todo.entity';
 import { TodosService } from './todos.service';
@@ -65,6 +67,49 @@ describe('TodosService', () => {
       model.create.mockResolvedValueOnce(expectedTodo);
       const todo = await model.create(CreateTodoRequestDto);
       expect(todo).toEqual(expectedTodo);
+    });
+  });
+
+  describe('findOne', () => {
+    describe('when todo with ID exists', () => {
+      it('should return todo', async () => {
+        const id = 'id_todo_1';
+        const expectedTodo: Partial<Todo> = {
+          _id: id,
+          name: 'Todo 1',
+          status: 'pending',
+          description: 'Description of todo 1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        jest.spyOn(model, 'findOne').mockReturnValueOnce(
+          createMock<Query<Todo, Todo>>({
+            exec: jest.fn().mockResolvedValue(expectedTodo),
+          }),
+        );
+
+        const todo = await service.findOne(id);
+        expect(todo).toEqual(expectedTodo);
+      });
+    });
+
+    describe('otherwise', () => {
+      it('should throw "NotFoundException"', async () => {
+        const id = 'id_todo_1';
+        jest.spyOn(model, 'findOne').mockReturnValueOnce(
+          createMock<Query<Todo, Todo>>({
+            exec: jest.fn().mockResolvedValue(undefined),
+          }),
+        );
+
+        try {
+          await service.findOne(id);
+        } catch (error) {
+          expect(error).toBeInstanceOf(NotFoundException);
+          expect(error.message).toEqual(`Todo #${id} not found`);
+        }
+      });
     });
   });
 });

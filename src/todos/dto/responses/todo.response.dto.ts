@@ -3,7 +3,7 @@ import { Exclude, Expose } from 'class-transformer';
 import { Todo } from '../../entities/todo.entity';
 
 @Exclude()
-export class CreateTodoResponseDto {
+export class TodoResponseDto {
   @ApiProperty()
   @Expose()
   id: string;
@@ -32,7 +32,7 @@ export class CreateTodoResponseDto {
     Object.assign(this, partial);
   }
 
-  public static fromEntity(partial: Partial<Todo>): CreateTodoResponseDto {
-    return new CreateTodoResponseDto(partial);
+  public static fromEntity(partial: Partial<Todo>): TodoResponseDto {
+    return new TodoResponseDto(partial);
   }
 }

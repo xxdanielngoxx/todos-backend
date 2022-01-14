@@ -12,7 +12,7 @@ import { TodosService } from './todos.service';
 import { CreateTodoRequestDto } from './dto/requests/create-todo.request.dto';
 import { UpdateTodoDto } from './dto/requests/update-todo.dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateTodoResponseDto } from './dto/responses/create-todo.response.dto';
+import { TodoResponseDto } from './dto/responses/todo.response.dto';
 
 @ApiTags('todos')
 @Controller('todos')
@@ -23,14 +23,14 @@ export class TodosController {
 
   @Post()
   @ApiResponse({
-    type: CreateTodoResponseDto,
+    type: TodoResponseDto,
     description: 'The todo has been successfully created.',
   })
   async create(
     @Body() createTodoDto: CreateTodoRequestDto,
-  ): Promise<CreateTodoResponseDto> {
+  ): Promise<TodoResponseDto> {
     const todo = await this.todosService.create(createTodoDto);
-    return CreateTodoResponseDto.fromEntity(todo.toJSON());
+    return TodoResponseDto.fromEntity(todo.toJSON());
   }
 
   @Get()
@@ -39,8 +39,9 @@ export class TodosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.todosService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const todo = await this.todosService.findOne(id);
+    return TodoResponseDto.fromEntity(todo.toJSON());
   }
 
   @Patch(':id')
