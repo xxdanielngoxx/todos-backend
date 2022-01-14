@@ -6,18 +6,31 @@ import {
   Patch,
   Param,
   Delete,
+  Logger,
 } from '@nestjs/common';
 import { TodosService } from './todos.service';
-import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
+import { CreateTodoRequestDto } from './dto/requests/create-todo.request.dto';
+import { UpdateTodoDto } from './dto/requests/update-todo.dto';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateTodoResponseDto } from './dto/responses/create-todo.response.dto';
 
+@ApiTags('todos')
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
+  private readonly logger = new Logger(TodosController.name);
+
   @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
-    return this.todosService.create(createTodoDto);
+  @ApiResponse({
+    type: CreateTodoResponseDto,
+    description: 'The todo has been successfully created.',
+  })
+  async create(
+    @Body() createTodoDto: CreateTodoRequestDto,
+  ): Promise<CreateTodoResponseDto> {
+    const todo = await this.todosService.create(createTodoDto);
+    return CreateTodoResponseDto.fromEntity(todo.toJSON());
   }
 
   @Get()
