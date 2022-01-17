@@ -16,6 +16,7 @@ jobs:
       MONGO_URI: ${{secrets.MONGO_URI}}
     steps:
       - uses: actions/checkout@v2
+      - run: echo mongo_uri '${MONGO_URI}'
           
       - name: Deploy to Heroku
         uses: AkhileshNS/heroku-deploy@v3.12.12
