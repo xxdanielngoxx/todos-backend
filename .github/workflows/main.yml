@@ -10,9 +10,9 @@ on:
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
-
+    env:
+      MONGO_URI: ${{secrets.MONGO_URI}}
     steps:
       - uses: actions/checkout@v2
           
@@ -22,11 +22,6 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
-          justlogin: true
-      - run: |
-          heroku container:login
-          heroku create
-          heroku container:push web
-          heroku container:release web
- 
+          usedocker: true
+
       
