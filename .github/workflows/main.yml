@@ -11,7 +11,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: CI
     steps:
       - uses: actions/checkout@v2
           
@@ -22,6 +21,7 @@ jobs:
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
           usedocker: true
+          docker_build_args: MONGO_URI
         env:
           MONGO_URI: ${{secrets.MONGO_URI}}
 
