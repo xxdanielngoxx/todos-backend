@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-jest';
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { FlattenMaps, LeanDocument } from 'mongoose';
+import { CreateTodoRequestDto } from './dto/requests/create-todo.request.dto';
+import { UpdateTodoDto } from './dto/requests/update-todo.dto';
 import { TodoResponseDto } from './dto/responses/todo.response.dto';
 import { Todo } from './entities/todo.entity';
 import { TodosController } from './todos.controller';
@@ -20,6 +20,9 @@ describe('TodosController', () => {
           useValue: {
             create: jest.fn(),
             findOne: jest.fn(),
+            findAll: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
           },
         },
       ],
@@ -43,75 +46,124 @@ describe('TodosController', () => {
 
   describe('create', () => {
     it('should create a new todo', async () => {
-      const createTodoRequestDto = {
-        name: 'Todo 1',
-        status: 'pending',
-        description: 'Description for todo 1',
-      };
-
-      const expectedJson = {
-        _id: 'id_todo_1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ...createTodoRequestDto,
-      } as FlattenMaps<LeanDocument<Todo>>;
-
-      jest.spyOn(service, 'create').mockResolvedValueOnce(
-        createMock<Todo>({
-          toJSON: jest.fn().mockReturnValueOnce(expectedJson),
+      const expectedTodo = createMock<Todo>({
+        toJSON: jest.fn().mockReturnValue({
+          _id: 'id_todo_1',
+          name: 'Todo 1',
+          status: 'pending',
+          description: 'Description for todo 1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }),
-      );
+      });
 
-      const todo = await controller.create(createTodoRequestDto);
-      expect(TodoResponseDto.fromEntity(todo)).toEqual(
-        TodoResponseDto.fromEntity(expectedJson),
-      );
+      jest.spyOn(service, 'create').mockResolvedValueOnce(expectedTodo);
+
+      const todo = await controller.create({} as CreateTodoRequestDto);
+
+      expect(todo).toEqual(TodoResponseDto.fromEntity(expectedTodo.toJSON()));
     });
   });
 
   describe('findOne', () => {
-    describe('when todo with ID exists', () => {
-      it('should return the todo object', async () => {
-        const id = 'id_todo_1';
-        const expectedTodo = {
+    it('should return the todo object', async () => {
+      const id = 'id_todo_1';
+      const expectedTodo = createMock<Todo>({
+        toJSON: jest.fn().mockReturnValue({
           _id: id,
           name: 'Todo 1',
           status: 'pending',
           description: 'Description of todo 1',
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as FlattenMaps<LeanDocument<Todo>>;
-
-        jest.spyOn(service, 'findOne').mockResolvedValue(
-          createMock<Todo>({
-            toJSON: jest.fn().mockReturnValueOnce(expectedTodo),
-          }),
-        );
-
-        const todo = await controller.findOne(id);
-        expect(TodoResponseDto.fromEntity(todo)).toEqual(
-          TodoResponseDto.fromEntity(expectedTodo),
-        );
+        }),
       });
+
+      jest.spyOn(service, 'findOne').mockResolvedValue(expectedTodo);
+
+      const todo = await controller.findOne(id);
+
+      expect(todo).toEqual(TodoResponseDto.fromEntity(expectedTodo.toJSON()));
     });
+  });
 
-    describe('otherwise', () => {
-      it('should throw "NotFoundErrorException"', async () => {
-        const id = 'id_todo_1';
-
-        jest.spyOn(service, 'findOne').mockResolvedValue(
-          createMock<Todo>({
-            toJSON: jest.fn().mockReturnValueOnce(undefined),
+  describe('findAll', () => {
+    it('should return todos', async () => {
+      const expectedTodos = createMock<Todo[]>([
+        {
+          toJSON: jest.fn().mockReturnValue({
+            _id: '_id_todo_1',
+            name: 'Todo 1',
+            status: 'pending',
+            description: 'Description todo 1',
+            createdAt: new Date(),
+            updatedAt: new Date(),
           }),
-        );
+        },
+        {
+          toJSON: jest.fn().mockReturnValue({
+            _id: '_id_todo_2',
+            name: 'Todo 2',
+            status: 'pending',
+            description: 'Description todo 2',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }),
+        },
+      ]);
 
-        try {
-          await service.findOne(id);
-        } catch (error) {
-          expect(error).toBeInstanceOf(NotFoundException);
-          expect(error.message).toEqual(`Todo #${id} not found`);
-        }
+      jest.spyOn(service, 'findAll').mockResolvedValueOnce(expectedTodos);
+
+      const todos = await controller.findAll({} as TodoResponseDto);
+
+      expect(todos).toEqual(
+        expectedTodos.map((todo) => TodoResponseDto.fromEntity(todo.toJSON())),
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('should update and return updated todo', async () => {
+      const id = 'id_todo_1';
+      const expectedTodo = createMock<Todo>({
+        toJSON: jest.fn().mockReturnValue({
+          _id: id,
+          name: 'Todo 1',
+          status: 'pending',
+          description: 'Description todo 1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       });
+
+      jest.spyOn(service, 'update').mockResolvedValueOnce(expectedTodo);
+
+      const todo = await controller.update(id, {} as UpdateTodoDto);
+
+      expect(todo).toEqual(TodoResponseDto.fromEntity(expectedTodo.toJSON()));
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete and return deleted todo', async () => {
+      const id = 'id_todo_1';
+
+      const expectedTodo = createMock<Todo>({
+        toJSON: jest.fn().mockReturnValue({
+          _id: id,
+          name: 'Todo 1',
+          status: 'pending',
+          description: 'Description todo 1',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      });
+
+      jest.spyOn(service, 'remove').mockResolvedValue(expectedTodo);
+
+      const todo = await controller.remove(id);
+
+      expect(todo).toEqual(TodoResponseDto.fromEntity(expectedTodo.toJSON()));
     });
   });
 });

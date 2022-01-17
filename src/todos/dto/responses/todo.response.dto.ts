@@ -1,35 +1,40 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+import { Types } from 'mongoose';
 import { Todo } from '../../entities/todo.entity';
 
 @Exclude()
 export class TodoResponseDto {
-  @ApiProperty()
   @Expose()
-  id: string;
+  @ApiProperty()
+  id: any;
 
-  @ApiProperty()
   @Expose()
+  @ApiProperty()
   name: string;
 
-  @ApiProperty()
   @Expose()
+  @ApiProperty()
   status: string;
 
-  @ApiProperty()
   @Expose()
+  @ApiProperty()
   description: string;
 
-  @ApiProperty({ name: 'created_at' })
-  @Expose({ name: 'created_at' })
+  @Expose()
+  @ApiProperty()
   createdAt?: Date;
 
-  @ApiProperty({ name: 'updated_at' })
-  @Expose({ name: 'updated_at' })
+  @Expose()
+  @ApiProperty()
   updatedAt?: Date;
 
   constructor(partial: Partial<Todo> = {}) {
-    Object.assign(this, partial);
+    const id =
+      partial._id instanceof Types.ObjectId
+        ? partial._id.toString()
+        : undefined;
+    Object.assign(this, partial, id && { id });
   }
 
   public static fromEntity(partial: Partial<Todo>): TodoResponseDto {
