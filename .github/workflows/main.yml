@@ -25,6 +25,7 @@ jobs:
           justlogin: true
       - run: |
           heroku container:login
+          heroku open --app todos-app-example
           heroku container:push web
           heroku container:release web
  
